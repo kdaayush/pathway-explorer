@@ -1,0 +1,159 @@
+type Query {
+    # Search across all biological entities
+    search(query: String!, limit: Int = 20): SearchResult!
+
+    # Pathway queries
+    pathway(id: String!): Pathway
+    pathwaysByOrganism(organism: String!, limit: Int = 20): [Pathway!]!
+
+    # Gene queries
+    gene(id: String!): Gene
+    genesByPathway(pathwayId: String!): [Gene!]!
+
+    # Protein queries
+    protein(accession: String!): Protein
+    proteinsByGene(geneName: String!): [Protein!]!
+
+    # Interaction network for visualization
+    interactionNetwork(entityId: String!, depth: Int = 1): InteractionNetwork!
+}
+
+type SearchResult {
+    pathways: [Pathway!]!
+    genes: [Gene!]!
+    proteins: [Protein!]!
+    totalCount: Int!
+}
+
+type Pathway {
+    id: String!
+    name: String!
+    description: String
+    organism: String
+    source: DataSource!
+    url: String
+    genes: [Gene!]!
+    imageUrl: String
+    category: String
+}
+
+type Gene {
+    id: String!
+    name: String!
+    description: String
+    organism: String
+    symbol: String
+    chromosomeLocation: String
+    pathways: [Pathway!]!
+    proteins: [Protein!]!
+    interactions: [Interaction!]!
+}
+
+type Protein {
+    id: String!
+    accession: String!
+    name: String!
+    fullName: String
+    organism: String
+    sequence: String
+    length: Int
+    molecularMass: Int
+    function: String
+    gene: Gene
+    geneNames: [String!]!
+    subcellularLocations: [String!]!
+    keywords: [String!]!
+    domains: [String!]!
+    crossReferences: [CrossReference!]!
+    entryUrl: String
+    source: DataSource!
+}
+
+type CrossReference {
+    database: String!
+    id: String!
+    description: String
+    url: String
+}
+
+type Interaction {
+    id: String!
+    sourceEntity: InteractionEntity!
+    targetEntity: InteractionEntity!
+    type: InteractionType!
+    confidence: Float
+    source: DataSource!
+    description: String
+}
+
+type InteractionEntity {
+    id: String!
+    name: String!
+    type: EntityType!
+}
+
+type InteractionNetwork {
+    nodes: [NetworkNode!]!
+    edges: [NetworkEdge!]!
+    metadata: NetworkMetadata!
+}
+
+type NetworkNode {
+    id: String!
+    label: String!
+    type: EntityType!
+    properties: NodeProperties
+}
+
+type NodeProperties {
+    organism: String
+    description: String
+    source: String
+}
+
+type NetworkEdge {
+    id: String!
+    source: String!
+    target: String!
+    type: InteractionType!
+    confidence: Float
+    label: String
+}
+
+type NetworkMetadata {
+    totalNodes: Int!
+    totalEdges: Int!
+    centerEntity: String!
+    depth: Int!
+}
+
+enum DataSource {
+    KEGG
+    REACTOME
+    UNIPROT
+    BIOCYC
+    NCBI
+    ENSEMBL
+    QUICKGO
+}
+
+enum InteractionType {
+    ACTIVATION
+    INHIBITION
+    BINDING
+    PHOSPHORYLATION
+    CATALYSIS
+    EXPRESSION
+    REPRESSION
+    INDIRECT
+    COMPOUND
+    UNKNOWN
+}
+
+enum EntityType {
+    GENE
+    PROTEIN
+    PATHWAY
+    COMPOUND
+    REACTION
+}

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Pathway Explorer - Interactive biological pathway visualization. Explore genes, proteins, and pathways from KEGG, Reactome, and UniProt.">
+    <title>Pathway Explorer | Biological Network Visualization</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/cytoscape@3.28.1/dist/cytoscape.min.js"></script>
+    <script src="https://unpkg.com/cytoscape-cola@2.5.1/cytoscape-cola.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="bg-animation">
+        <div class="floating-orb orb-1"></div>
+        <div class="floating-orb orb-2"></div>
+        <div class="floating-orb orb-3"></div>
+        <div class="floating-orb orb-4"></div>
+        <div class="dna-helix"></div>
+    </div>
+
+    <!-- Top Navigation Bar -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-brand">
+            <div class="brand-icon">
+                <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="20" cy="20" r="4" fill="url(#grad1)"/>
+                    <circle cx="10" cy="10" r="3" fill="url(#grad2)"/>
+                    <circle cx="30" cy="10" r="3" fill="url(#grad2)"/>
+                    <circle cx="10" cy="30" r="3" fill="url(#grad2)"/>
+                    <circle cx="30" cy="30" r="3" fill="url(#grad2)"/>
+                    <line x1="20" y1="20" x2="10" y2="10" stroke="url(#grad3)" stroke-width="1.5" opacity="0.6"/>
+                    <line x1="20" y1="20" x2="30" y2="10" stroke="url(#grad3)" stroke-width="1.5" opacity="0.6"/>
+                    <line x1="20" y1="20" x2="10" y2="30" stroke="url(#grad3)" stroke-width="1.5" opacity="0.6"/>
+                    <line x1="20" y1="20" x2="30" y2="30" stroke="url(#grad3)" stroke-width="1.5" opacity="0.6"/>
+                    <circle cx="20" cy="5" r="2" fill="url(#grad2)"/>
+                    <circle cx="35" cy="20" r="2" fill="url(#grad2)"/>
+                    <circle cx="20" cy="35" r="2" fill="url(#grad2)"/>
+                    <circle cx="5" cy="20" r="2" fill="url(#grad2)"/>
+                    <line x1="20" y1="20" x2="20" y2="5" stroke="url(#grad3)" stroke-width="1" opacity="0.4"/>
+                    <line x1="20" y1="20" x2="35" y2="20" stroke="url(#grad3)" stroke-width="1" opacity="0.4"/>
+                    <line x1="20" y1="20" x2="20" y2="35" stroke="url(#grad3)" stroke-width="1" opacity="0.4"/>
+                    <line x1="20" y1="20" x2="5" y2="20" stroke="url(#grad3)" stroke-width="1" opacity="0.4"/>
+                    <defs>
+                        <linearGradient id="grad1" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#06d6a0"/><stop offset="1" stop-color="#118ab2"/></linearGradient>
+                        <linearGradient id="grad2" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#8338ec"/><stop offset="1" stop-color="#3a86ff"/></linearGradient>
+                        <linearGradient id="grad3" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#06d6a0"/><stop offset="1" stop-color="#8338ec"/></linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            <span class="brand-text">Pathway<span class="brand-highlight">Explorer</span></span>
+        </div>
+        <div class="nav-links">
+            <button class="nav-link active" data-view="explorer" id="nav-explorer">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+                Explorer
+            </button>
+            <button class="nav-link" data-view="pathways" id="nav-pathways">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg>
+                Pathways
+            </button>
+            <button class="nav-link" data-view="proteins" id="nav-proteins">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                Proteins
+            </button>
+        </div>
+        <div class="nav-status">
+            <div class="status-dot" id="api-status-dot"></div>
+            <span class="status-text" id="api-status-text">Connecting...</span>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Hero / Search Section -->
+        <section class="hero-section" id="hero-section">
+            <div class="hero-content">
+                <h1 class="hero-title">
+                    Explore <span class="gradient-text">Biological Pathways</span>
+                </h1>
+                <p class="hero-subtitle">
+                    Search genes, proteins, and pathways across KEGG, Reactome, and UniProt. 
+                    Visualize complex biological networks through interactive graphs.
+                </p>
+                <div class="search-container" id="search-container">
+                    <div class="search-box">
+                        <svg class="search-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                        <input type="text" id="search-input" placeholder="Search for TP53, BRCA1, insulin signaling, apoptosis..." autocomplete="off">
+                        <button class="search-btn" id="search-btn">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                        </button>
+                    </div>
+                    <div class="search-suggestions" id="search-suggestions">
+                        <div class="suggestion-group">
+                            <span class="suggestion-label">Try searching:</span>
+                            <button class="suggestion-chip" data-query="TP53">TP53</button>
+                            <button class="suggestion-chip" data-query="BRCA1">BRCA1</button>
+                            <button class="suggestion-chip" data-query="insulin signaling">Insulin Signaling</button>
+                            <button class="suggestion-chip" data-query="apoptosis">Apoptosis</button>
+                            <button class="suggestion-chip" data-query="MAPK">MAPK</button>
+                            <button class="suggestion-chip" data-query="cell cycle">Cell Cycle</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Quick Stats -->
+                <div class="quick-stats" id="quick-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon kegg-icon">K</div>
+                        <div class="stat-info">
+                            <span class="stat-value">KEGG</span>
+                            <span class="stat-label">Pathway Database</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon reactome-icon">R</div>
+                        <div class="stat-info">
+                            <span class="stat-value">Reactome</span>
+                            <span class="stat-label">Reaction Database</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon uniprot-icon">U</div>
+                        <div class="stat-info">
+                            <span class="stat-value">UniProt</span>
+                            <span class="stat-label">Protein Database</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section class="results-section hidden" id="results-section">
+            <div class="results-header">
+                <button class="back-btn" id="back-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                    Back
+                </button>
+                <h2 class="results-title" id="results-title">Search Results</h2>
+                <div class="results-count" id="results-count"></div>
+            </div>
+
+            <!-- Tab Bar -->
+            <div class="tab-bar" id="tab-bar">
+                <button class="tab active" data-tab="all" id="tab-all">
+                    All <span class="tab-count" id="count-all">0</span>
+                </button>
+                <button class="tab" data-tab="pathways" id="tab-pathways">
+                    Pathways <span class="tab-count" id="count-pathways">0</span>
+                </button>
+                <button class="tab" data-tab="genes" id="tab-genes">
+                    Genes <span class="tab-count" id="count-genes">0</span>
+                </button>
+                <button class="tab" data-tab="proteins" id="tab-proteins">
+                    Proteins <span class="tab-count" id="count-proteins">0</span>
+                </button>
+                <button class="tab" data-tab="network" id="tab-network">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="4" cy="6" r="2"/><circle cx="20" cy="6" r="2"/><circle cx="4" cy="18" r="2"/><circle cx="20" cy="18" r="2"/><line x1="12" y1="9" x2="6" y2="7"/><line x1="12" y1="9" x2="18" y2="7"/><line x1="12" y1="15" x2="6" y2="17"/><line x1="12" y1="15" x2="18" y2="17"/></svg>
+                    Network
+                </button>
+            </div>
+
+            <!-- Results Content -->
+            <div class="results-content" id="results-content">
+                <!-- Results cards populated by JS -->
+            </div>
+
+            <!-- Network Visualization -->
+            <div class="network-container hidden" id="network-container">
+                <div class="network-toolbar">
+                    <div class="toolbar-group">
+                        <button class="toolbar-btn" id="btn-zoom-in" title="Zoom In">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                        </button>
+                        <button class="toolbar-btn" id="btn-zoom-out" title="Zoom Out">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                        </button>
+                        <button class="toolbar-btn" id="btn-fit" title="Fit to Screen">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+                        </button>
+                    </div>
+                    <div class="toolbar-group">
+                        <select class="layout-select" id="layout-select">
+                            <option value="cose">Force-Directed</option>
+                            <option value="circle">Circular</option>
+                            <option value="concentric">Concentric</option>
+                            <option value="breadthfirst">Hierarchical</option>
+                            <option value="grid">Grid</option>
+                        </select>
+                    </div>
+                    <div class="toolbar-group">
+                        <div class="network-stats" id="network-stats">
+                            <span class="net-stat"><strong id="stat-nodes">0</strong> nodes</span>
+                            <span class="net-stat"><strong id="stat-edges">0</strong> edges</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cytoscape-wrapper">
+                    <div id="cytoscape-container"></div>
+                </div>
+                <!-- Node Info Panel -->
+                <div class="node-info-panel hidden" id="node-info-panel">
+                    <button class="panel-close" id="panel-close">&times;</button>
+                    <div class="panel-content" id="panel-content">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+                <!-- Legend -->
+                <div class="network-legend">
+                    <h4>Legend</h4>
+                    <div class="legend-items">
+                        <div class="legend-item"><span class="legend-dot gene-dot"></span> Gene</div>
+                        <div class="legend-item"><span class="legend-dot protein-dot"></span> Protein</div>
+                        <div class="legend-item"><span class="legend-dot pathway-dot"></span> Pathway</div>
+                        <div class="legend-item"><span class="legend-dot compound-dot"></span> Compound</div>
+                    </div>
+                    <div class="legend-edges">
+                        <div class="legend-item"><span class="legend-line activation"></span> Activation</div>
+                        <div class="legend-item"><span class="legend-line inhibition"></span> Inhibition</div>
+                        <div class="legend-item"><span class="legend-line binding"></span> Binding</div>
+                        <div class="legend-item"><span class="legend-line catalysis"></span> Catalysis</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Detail View -->
+        <section class="detail-section hidden" id="detail-section">
+            <div class="detail-header">
+                <button class="back-btn" id="detail-back-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                    Back to Results
+                </button>
+            </div>
+            <div class="detail-content" id="detail-content">
+                <!-- Populated by JS -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay hidden" id="loading-overlay">
+        <div class="loader">
+            <div class="loader-helix">
+                <div class="helix-strand strand-1"></div>
+                <div class="helix-strand strand-2"></div>
+            </div>
+            <p class="loader-text" id="loader-text">Searching biological databases...</p>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>

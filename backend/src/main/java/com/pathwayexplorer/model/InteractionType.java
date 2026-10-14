@@ -1,0 +1,6 @@
+package com.pathwayexplorer.model;
+
+public enum InteractionType {
+    ACTIVATION, INHIBITION, BINDING, PHOSPHORYLATION,
+    CATALYSIS, EXPRESSION, REPRESSION, INDIRECT, COMPOUND, UNKNOWN
+}
