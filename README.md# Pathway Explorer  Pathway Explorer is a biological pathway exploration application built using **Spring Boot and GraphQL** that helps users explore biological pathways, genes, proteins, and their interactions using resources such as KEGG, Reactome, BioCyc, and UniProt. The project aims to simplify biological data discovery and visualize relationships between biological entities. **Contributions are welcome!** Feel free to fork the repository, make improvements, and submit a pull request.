@@ -1,3 +1,6 @@
 # Pathway Explorer
 
-Pathway Explorer is a biological pathway exploration application built using **Spring Boot and GraphQL** that helps users explore biological pathways, genes, proteins, and their interactions using resources such as KEGG, Reactome, BioCyc, and UniProt. The project aims to simplify biological data discovery and visualize relationships between biological entities. **Contributions are welcome!** Feel free to fork the repository, make improvements, and submit a pull request.
+Pathway Explorer is a biological pathway exploration application built using **Spring Boot and GraphQL** that helps users explore biological pathways, 
+genes, proteins, and their interactions using resources such as KEGG, Reactome, BioCyc, and UniProt. The project aims to simplify biological data discovery 
+and visualize relationships between biological entities. **Contributions are welcome!** Feel free to fork the repository, make improvements, and submit
+a pull request.
